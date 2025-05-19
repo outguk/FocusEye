@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>환영합니다, {{ user.name }}님</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+
+        p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+            button:disabled {
+                background-color: #d6d6d6;
+                cursor: not-allowed;
+            }
+
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #ff6600;
+        }
+
+        #blink-data, #focus_time {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .custom-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: #007bff;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+            .custom-button img {
+                margin-right: 10px;
+            }
+
+            .custom-button:hover {
+                text-decoration: underline;
+            }
+    </style>
+</head>
+<body data-user-id="{{ user.id }}">
+    <div class="container">
+        <h1>환영합니다, {{ user.name }}님!</h1>
+        <p>현재 로그인 이메일: {{ user.email }}</p>
+
+        <h2>눈 깜박임 측정 및 집중 시간 측정</h2>
+        <button id="start-measurement">측정 시작</button>
+        <button id="stop-measurement" disabled>측정 종료</button>
+
+        <div id="status">측정 상태: 대기 중</div>
+        <div id="blink-data">Blink Count: 0</div>
+        <div id="focus_time">Focus Time: 0</div>
+
+        <div style="margin-top: 20px">
+            <button id="view-analysis" class="custom-button">
+                <img src="https://cdn-icons-png.flaticon.com/512/846/846449.png" alt="분석 아이콘" width="30" height="30" />
+                <span>분석 결과 보기</span>
+            </button>
+
+            <button id="go-home" class="custom-button">
+                <img src="https://cdn-icons-png.flaticon.com/512/1946/1946488.png" alt="홈 아이콘" width="30" height="30" />
+                <span>홈 화면으로 이동</span>
+            </button>
+
+            <button id="logout" class="custom-button">
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="로그아웃 아이콘" width="30" height="30" />
+                <span>로그아웃</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // HTML 속성에서 user ID 읽기
+        const userId = document.body.getAttribute("data-user-id");
+        let websocket;
+
+        // 알림 상태를 추적하는 플래그
+        let notificationGiven = false;
+
+        // 분석 결과 버튼 이벤트
+        document.getElementById("view-analysis").addEventListener("click", () => {
+            window.location.href = `/analysis/${userId}`;
+            console.log("분석 결과 페이지로 이동");
+        });
+
+        // 홈 버튼 이벤트
+        document.getElementById("go-home").addEventListener("click", () => {
+            window.location.href = "/";
+            console.log("홈 화면으로 이동");
+        });
+
+        // 로그아웃 버튼 이벤트
+        document.getElementById("logout").addEventListener("click", () => {
+            window.location.href = "/login";
+            console.log("로그아웃");
+        });
+
+        // 측정 시작 버튼 클릭 시 WebSocket 연결 시작
+        document.getElementById("start-measurement").addEventListener("click", () => {
+            // 알림 권한 요청
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === "granted") {
+                        console.log("알림 권한이 허용되었습니다.");
+                    } else {
+                        console.log("알림 권한이 거부되었습니다.");
+                    }
+                });
+            }
+
+            // Websocket 연결
+            websocket = new WebSocket(`ws://127.0.0.1:8000/ws/blink/${userId}`);
+
+            // WebSocket 연결 성공 시 처리
+            websocket.onopen = () => {
+                document.getElementById("status").innerText = "측정 상태: 측정 중";
+                document.getElementById("start-measurement").disabled = true;
+                document.getElementById("stop-measurement").disabled = false;
+                websocket.send(JSON.stringify({ type: "INIT", user_id: userId }));
+                console.log(`WebSocket connection established for user ID: ${userId}`);
+
+                websocket.send("Operating");
+                console.log("Operating signal sent");
+            };
+
+            // 서버로부터 메시지 수신 시 처리(깜박임, 집중 시간)
+            websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.blink_count !== undefined) {
+                    document.getElementById("blink-data").innerText = `Blink Count: ${data.blink_count}`;
+                    console.log(`Received Blink Count: ${data.blink_count}`);
+                }
+
+                if (data.focus_time !== undefined) {
+                    const formattedFocusTime = parseFloat(data.focus_time).toFixed(1);
+                    document.getElementById("focus_time").innerText = `Focus Time: ${formattedFocusTime}`;
+                    console.log(`Received Focus Time: ${formattedFocusTime}`);
+                }
+
+                if (data.blink_count === 2 && !notificationGiven) {
+                    showBrowserNotification("2번 깜박임을 완료했습니다!");
+                    notificationGiven = true;
+                }
+
+                if (data.blink_count !== 2 && notificationGiven) {
+                    notificationGiven = false;
+                }
+
+                function showBrowserNotification(message) {
+                    if (Notification.permission === "granted") {
+                        new Notification("깜박임 알림", { body: message });
+                    } else {
+                        console.log("알림 권한이 없습니다.");
+                    }
+                }
+            };
+
+            websocket.onerror = (error) => {
+                document.getElementById("status").innerText = "Status: Connection Error";
+                console.error("WebSocket error:", error);
+            };
+
+            websocket.onclose = () => {
+                document.getElementById("status").innerText = "측정 상태: 측정 종료";
+                document.getElementById("start-measurement").disabled = false;
+                document.getElementById("stop-measurement").disabled = true;
+                console.log("WebSocket connection closed.");
+            };
+        });
+
+        document.getElementById("stop-measurement").addEventListener("click", () => {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send("STOP");
+                websocket.close();
+                console.log("측정 종료");
+                window.location.href = `/analysis/${userId}`;
+            } else {
+                console.log("WebSocket이 닫혀 있어 STOP 메시지를 전송할 수 없습니다.");
+            }
+        });
+    </script>
+</body>
+</html>

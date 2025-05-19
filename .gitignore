@@ -1,0 +1,25 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+ENV/
+env/
+Include/
+Lib/
+Scripts/
+pyvenv.cfg
+
+# VS Code settings
+.vscode/
+
+# Testing
+.pytest_cache/
+
+# Model files
+*.weights
+
+# Others
+.DS_Store
+*.db

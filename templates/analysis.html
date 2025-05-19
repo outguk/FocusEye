@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>세션 데이터 분석</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 20px;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-align: center;
+        }
+
+        .session-list {
+            margin-bottom: 20px;
+        }
+
+            .session-list h2 {
+                font-size: 20px;
+                color: #555;
+                margin-bottom: 10px;
+            }
+
+            .session-list ul {
+                list-style: none;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .session-list li {
+                padding: 10px;
+                border: 1px solid #00796b;
+                background-color: #e0f7fa;
+                border-radius: 5px;
+                text-align: center;
+                font-size: 16px;
+                color: #00796b;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background-color 0.3s, color 0.3s;
+            }
+
+                .session-list li:hover {
+                    background-color: #00796b;
+                    color: #fff;
+                }
+
+        .data-display {
+            margin-top: 20px;
+        }
+
+        .data-field {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+            .data-field h3 {
+                margin: 0;
+                font-size: 18px;
+                color: #444;
+            }
+
+            .data-field p {
+                margin: 10px 0 0;
+                font-size: 16px;
+                color: #555;
+            }
+
+        .blink-warning {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .low-blink {
+            color: red;
+        }
+
+        .moderate-blink {
+            color: orange;
+        }
+
+        .normal-blink {
+            color: green;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        canvas {
+            margin-bottom: 20px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .legend-text {
+            font-size: 14px;
+            color: #444;
+        }
+
+        .back-button {
+            display: block;
+            margin: 30px auto;
+            text-align: center;
+            background-color: #ffffff;
+            color: black;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            transition: background-color 0.3s;
+        }
+
+            .back-button:hover {
+                background-color: #0056b3;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>세션 데이터 분석</h1>
+
+        <div class="session-list">
+            <h2>저장된 분석 목록</h2>
+            <ul id="sessionListContainer"></ul>
+        </div>
+
+        <div class="data-display">
+            <div class="data-field">
+                <h3>평균 깜빡임 횟수</h3>
+                <p id="avgBlinkRate">-</p>
+                <p id="blinkWarning" class="blink-warning"></p>
+            </div>
+            <div class="data-field">
+                <h3>측정 시간</h3>
+                <p id="totalTime">-</p>
+            </div>
+            <div class="data-field">
+                <h3>집중 시간</h3>
+                <p id="focusTime">-</p>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="focusChart" width="250" height="250"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #32CD32;"></div>
+                    <div class="legend-text" id="focusPercentage">집중 시간: -%</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #808080;"></div>
+                    <div class="legend-text" id="nonFocusPercentage">비집중 시간: -%</div>
+                </div>
+            </div>
+        </div>
+
+        <button id="go-usermain" class="back-button">
+            <img src="https://cdn-icons-png.flaticon.com/512/846/846449.png" alt="분석 아이콘" width="30" height="30" />
+            <span>유저 메인 페이지로 이동</span>
+        </button>
+    </div>
+
+    <script>
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            return `${month}월 ${day}일 ${hours}시 ${minutes}분`;
+        }
+
+        function formatMinutesAndSeconds(timeInSeconds) {
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = Math.floor(timeInSeconds % 60);
+            return `${minutes}분 ${seconds}초`;
+        }
+
+        function updateBlinkWarning(averageBlinkRate) {
+            const warningElement = document.getElementById("blinkWarning");
+            if (averageBlinkRate <= 10) {
+                warningElement.textContent = "눈 깜빡임 횟수가 평균의 절반으로 눈 건강이 악화될 수 있습니다.";
+                warningElement.className = "blink-warning low-blink";
+            } else if (averageBlinkRate > 10 && averageBlinkRate <= 15) {
+                warningElement.textContent = "눈 깜빡임이 부족합니다. 주의가 필요합니다.";
+                warningElement.className = "blink-warning moderate-blink";
+            } else {
+                warningElement.textContent = "눈 깜빡임 횟수가 정상입니다.";
+                warningElement.className = "blink-warning normal-blink";
+            }
+        }
+
+        function drawFocusChart(totalTime, focusTime) {
+            const canvas = document.getElementById("focusChart");
+            const ctx = canvas.getContext("2d");
+
+            canvas.width = 250;
+            canvas.height = 250;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 100;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const focusAngle = (focusTime / totalTime) * 2 * Math.PI;
+            const focusPercentage = ((focusTime / totalTime) * 100).toFixed(1);
+            const nonFocusPercentage = (100 - focusPercentage).toFixed(1);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = "#f0f0f0";
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, 0, focusAngle);
+            ctx.fillStyle = "#32CD32";
+            ctx.fill();
+
+            document.getElementById("focusPercentage").innerText = `집중 시간: ${focusPercentage}%`;
+            document.getElementById("nonFocusPercentage").innerText = `비집중 시간: ${nonFocusPercentage}%`;
+        }
+
+        function displaySessionList(sessions) {
+            const sessionListContainer = document.getElementById("sessionListContainer");
+            sessionListContainer.innerHTML = "";
+
+            sessions.forEach((session) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = formatDateTime(session.start_time);
+                listItem.onclick = () => displaySessionData(session);
+                sessionListContainer.appendChild(listItem);
+            });
+        }
+
+        function displaySessionData(session) {
+            const averageBlinkRate = session.average_blink_rate;
+            const blinkRateElement = document.getElementById("avgBlinkRate");
+
+            blinkRateElement.textContent = averageBlinkRate;
+            blinkRateElement.style.color = averageBlinkRate <= 10 ? "red" : averageBlinkRate > 10 && averageBlinkRate <= 15 ? "orange" : "green";
+
+            document.getElementById("totalTime").innerText = formatMinutesAndSeconds(session.total_time);
+            document.getElementById("focusTime").innerText = formatMinutesAndSeconds(session.focus_time);
+
+            updateBlinkWarning(averageBlinkRate);
+            drawFocusChart(session.total_time, session.focus_time);
+        }
+
+        // 분석 결과 버튼 이벤트
+        document.getElementById("go-usermain").addEventListener("click", () => {
+            window.location.href = `/main/${userId}`;
+            console.log("분석 결과 페이지로 이동");
+        });
+
+        const userId = "{{ user_id }}";
+
+        if (userId) {
+            let allSessions = [];
+
+            async function fetchAllSessions() {
+                const response = await fetch(`http://127.0.0.1:8000/api/get_all_sessions/${userId}`);
+                const data = await response.json();
+                allSessions = data.sessions;
+
+                displaySessionList(allSessions);
+                displaySessionData(data.latest_session);
+            }
+
+            fetchAllSessions();
+        } else {
+            console.error("User ID가 없습니다.");
+        }
+    </script>
+</body>
+</html>

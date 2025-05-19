@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원가입</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        button {
+            width: calc(100% - 20px); /* 동일한 너비 설정 */
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            border: 1px solid #ccc;
+            color: #333;
+        }
+
+            input[type="text"]:focus,
+            input[type="email"]:focus,
+            input[type="password"]:focus {
+                border-color: #0056b3;
+                outline: none;
+            }
+
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+            button:hover {
+                background-color: #004494;
+            }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+            .form-footer a {
+                color: #0056b3;
+                text-decoration: none;
+            }
+
+                .form-footer a:hover {
+                    text-decoration: underline;
+                }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>회원가입</h1>
+        <form action="/signup" method="post">
+            <label for="name">이름:</label>
+            <input type="text" id="name" name="name" required />
+
+            <label for="email">이메일:</label>
+            <input type="email" id="email" name="email" required />
+
+            <label for="password">비밀번호:</label>
+            <input type="password" id="password" name="password" required />
+
+            <button type="submit">회원가입</button>
+        </form>
+
+        <div class="form-footer">
+            <p>이미 계정이 있으신가요? <a href="/login">로그인</a></p>
+        </div>
+    </div>
+</body>
+</html>
