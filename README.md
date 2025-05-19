@@ -65,9 +65,13 @@ YOLOv3와 Mediapipe를 활용한 영상 인식과 FastAPI 기반 백엔드 서�
 ```
 
 ## 실제 서비스 이미지
+
 1. 분석 시 웹캠 화면
+
 <img width="238" alt="1" src="https://github.com/user-attachments/assets/558fe4a2-c13d-4529-aec7-dd772593e9e7" />
 
+
 2. 분석 페이지 화면
+
 <img width="455" alt="2" src="https://github.com/user-attachments/assets/2bc380ae-3353-4559-966b-fbb3031dd867" />
 
