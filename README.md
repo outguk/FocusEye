@@ -62,7 +62,7 @@ YOLOv3와 Mediapipe를 활용한 영상 인식과 FastAPI 기반 백엔드 서�
 ├── models.py              # SQLAlchemy ORM 모델 정의
 ├── database.py            # DB 연결 및 초기화 설정
 ├── coco.names             # YOLO 클래스 이름 목록
-
+```
 
 ## 실제 서비스 이미지
 1. 분석 시 웹캠 화면
