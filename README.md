@@ -1,4 +1,4 @@
-# 👁️ FocusEye+: 비언어 집중도 분석 웹 서비스
+# 👁️ FocusEye: 비언어 집중도 분석 웹 서비스
 
 AI 기반의 실시간 웹캠 영상 분석을 통해 사용자의 **눈 깜빡임 빈도**에 따른 경고 알림을 제공하고 **집중 시간**을 측정하여 **비언어적 집중도 평가**를 제공하는 웹 서비스입니다.  
 YOLOv3와 Mediapipe를 활용한 영상 인식과 FastAPI 기반 백엔드 서버를 통해 실시간 분석 결과를 시각적으로 제공합니다.
@@ -68,7 +68,8 @@ YOLOv3와 Mediapipe를 활용한 영상 인식과 FastAPI 기반 백엔드 서�
 
 1. 분석 시 웹캠 화면
 
-<img width="238" alt="1" src="https://github.com/user-attachments/assets/558fe4a2-c13d-4529-aec7-dd772593e9e7" />
+<img width="238" alt="1" src="https://github.com/user-attachments/assets/437fa0f4-cc8d-4e00-b149-745f63f37f17" />
+
 
 
 2. 분석 페이지 화면
